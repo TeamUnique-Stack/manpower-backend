@@ -10,28 +10,46 @@ const {
   getDashboardStats
 } = require('../controllers/employeeController');
 const { protect, authorize } = require('../middleware/auth');
-const {
-  employeeValidation,
-  idValidation,
-  validate
-} = require('../middleware/validation');
 
-// Protect all routes
-router.use(protect);
+// Stats routes - with protect only
+router.get('/stats/overview', protect, getEmployeeStats);
+router.get('/stats/dashboard', protect, getDashboardStats);
 
-router.get('/stats/overview', getEmployeeStats);
-router.get('/stats/dashboard', getDashboardStats);
+// Employee CRUD routes - with explicit middleware
+router.get('/', protect, getEmployees);
+router.post('/', protect, (req, res, next) => {
+  // Check authorization inline
+  if (!['admin', 'manager'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: `User role ${req.user.role} is not authorized to access this route`
+    });
+  }
+  next();
+}, createEmployee);
 
-router
-  .route('/')
-  .get(getEmployees)
-  .post(authorize('admin', 'manager'), employeeValidation, validate, createEmployee);
+router.get('/:id', protect, getEmployee);
+router.put('/:id', protect, (req, res, next) => {
+  // Check authorization inline
+  if (!['admin', 'manager'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: `User role ${req.user.role} is not authorized to access this route`
+    });
+  }
+  next();
+}, updateEmployee);
 
-router
-  .route('/:id')
-  .get(idValidation, validate, getEmployee)
-  .put(authorize('admin', 'manager'), idValidation, employeeValidation, validate, updateEmployee)
-  .delete(authorize('admin'), idValidation, validate, deleteEmployee);
+router.delete('/:id', protect, (req, res, next) => {
+  // Check authorization inline
+  if (!['admin'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: `User role ${req.user.role} is not authorized to access this route`
+    });
+  }
+  next();
+}, deleteEmployee);
 
 module.exports = router;
 

@@ -64,23 +64,37 @@ exports.getEmployee = async (req, res) => {
 // @access  Private (Admin/Manager)
 exports.createEmployee = async (req, res) => {
   try {
+    console.log('=== CREATE EMPLOYEE START ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('User:', req.user);
+    
     // Generate employee ID
     const count = await Employee.countDocuments();
     const employeeId = `EMP${String(count + 1).padStart(5, '0')}`;
+    console.log('Generated employee ID:', employeeId);
 
     const employee = await Employee.create({
       ...req.body,
       employeeId
     });
 
+    console.log('Employee created successfully:', employee._id);
+    console.log('=== CREATE EMPLOYEE END ===');
+
     res.status(201).json({
       success: true,
       data: employee
     });
   } catch (error) {
+    console.error('=== CREATE EMPLOYEE ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('=== ERROR END ===');
+    
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

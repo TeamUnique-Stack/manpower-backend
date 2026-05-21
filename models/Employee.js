@@ -157,17 +157,17 @@ const employeeSchema = new mongoose.Schema({
 });
 
 // Calculate salary components before saving
-employeeSchema.pre('save', function(next) {
+employeeSchema.pre('save', async function() {
   // Calculate DA
-  this.salaryStructure.da.amount = 
+  this.salaryStructure.da.amount =
     (this.salaryStructure.basicSalary * this.salaryStructure.da.percentage) / 100;
   
   // Calculate HRA
-  this.salaryStructure.hra.amount = 
+  this.salaryStructure.hra.amount =
     (this.salaryStructure.basicSalary * this.salaryStructure.hra.percentage) / 100;
   
   // Calculate Gross Salary
-  this.salaryStructure.grossSalary = 
+  this.salaryStructure.grossSalary =
     this.salaryStructure.basicSalary +
     this.salaryStructure.da.amount +
     this.salaryStructure.hra.amount +
@@ -189,7 +189,7 @@ employeeSchema.pre('save', function(next) {
   }
   
   // Calculate Net Salary
-  this.netSalary = 
+  this.netSalary =
     this.salaryStructure.grossSalary -
     this.deductions.pf.employeeContribution -
     (this.deductions.esi.employeeContribution || 0) -
@@ -199,14 +199,12 @@ employeeSchema.pre('save', function(next) {
   const gratuityProvision = (this.salaryStructure.basicSalary * 4.81) / 100;
   const bonusProvision = (this.salaryStructure.basicSalary * 8.33) / 100;
   
-  this.ctc = 
+  this.ctc =
     this.salaryStructure.grossSalary +
     this.deductions.pf.employerContribution +
     (this.deductions.esi.employerContribution || 0) +
     gratuityProvision +
     bonusProvision;
-  
-  next();
 });
 
 module.exports = mongoose.model('Employee', employeeSchema);
